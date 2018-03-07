@@ -46,16 +46,27 @@ defmodule Kerosene do
 
   defp get_total_count(count, _repo, _query) when is_integer(count) and count >= 0, do: count
   defp get_total_count(_count, repo, query) do
-    primary_key = get_primary_key(query)
-
     total_pages =
       query
       |> exclude(:preload)
       |> exclude(:order_by)
-      |> exclude(:select)
-      |> select([i], count(field(i, ^primary_key), :distinct))
+      |> get_total_count()
       |> repo.one
     total_pages || 0
+  end
+
+  defp get_total_count(%{group_bys: [_ | _]} = query) do
+    query
+    |> subquery()
+    |> select(count("*"))
+  end
+
+  defp get_total_count(query) do
+    primary_key = get_primary_key(query)
+
+    query
+    |> exclude(:select)
+    |> select([i], count(field(i, ^primary_key), :distinct))
   end
 
   def get_primary_key(query) do

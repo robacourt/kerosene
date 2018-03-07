@@ -2,6 +2,7 @@ defmodule KeroseneTest do
   use ExUnit.Case
   alias Kerosene.Repo
   alias Kerosene.Product
+  import Ecto.Query
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Kerosene.Repo)
@@ -18,6 +19,12 @@ defmodule KeroseneTest do
     create_products()
     {_items, kerosene} = Product |> Repo.paginate(%{}, per_page: 5)
     assert kerosene.per_page == 5
+  end
+
+  test "group_by in query" do
+    create_products()
+    {_items, kerosene} = Product |> group_by([p], p.id) |> Repo.paginate(%{})
+    assert kerosene.total_count == 15
   end
 
   test "returns all the records" do
